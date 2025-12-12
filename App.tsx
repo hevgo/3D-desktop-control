@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { FilesetResolver, GestureRecognizer, DrawingUtils } from '@mediapipe/tasks-vision';
+import { FilesetResolver, GestureRecognizer } from '@mediapipe/tasks-vision';
 import { drawLandmarks, detectCustomGestures } from './utils';
-import { AppState, GestureRecognizerResult, AIResponse } from './types';
+import { AppState, AIResponse } from './types';
 import { InfoPanel } from './components/InfoPanel';
 import { ReferencePanel } from './components/ReferencePanel';
 import { getGestureInsight } from './services/geminiService';
@@ -12,6 +12,10 @@ const App: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [recognizer, setRecognizer] = useState<GestureRecognizer | null>(null);
   const requestRef = useRef<number>(0);
+  
+  // View Settings State
+  const [videoOpacity, setVideoOpacity] = useState<number>(0.2);
+  const [isVideoVisible, setIsVideoVisible] = useState<boolean>(true);
   
   const [appState, setAppState] = useState<AppState>({
     isModelLoaded: false,
@@ -44,7 +48,6 @@ const App: React.FC = () => {
         gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
           baseOptions: {
             modelAssetPath: "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
-            delegate: "CPU" 
           },
           runningMode: "VIDEO",
           numHands: 1, 
@@ -151,7 +154,7 @@ const App: React.FC = () => {
           // Get basic ML result
           let gestureName = "None";
           let score = 0;
-          if (result.gestures && result.gestures.length > 0) {
+          if (result.gestures && result.gestures.length > 0 && result.gestures[0].length > 0) {
               const detected = result.gestures[0][0].categoryName;
               // Explicitly filter out "ILoveYou" as requested
               if (detected !== "ILoveYou") {
@@ -242,12 +245,27 @@ const App: React.FC = () => {
             </div>
         )}
 
-        <video ref={videoRef} className="absolute inset-0 w-full h-full object-cover transform scale-x-[-1]" autoPlay playsInline muted />
+        <video 
+          ref={videoRef} 
+          className="absolute inset-0 w-full h-full object-cover transform scale-x-[-1]" 
+          style={{ opacity: isVideoVisible ? videoOpacity : 0 }}
+          autoPlay 
+          playsInline 
+          muted 
+        />
         <canvas ref={canvasRef} className="absolute inset-0 w-full h-full object-cover transform scale-x-[-1]" />
         
         {appState.cameraActive && (
             <>
-                <InfoPanel state={appState} aiResponse={aiResponse} onAskAI={handleAskAI} />
+                <InfoPanel 
+                  state={appState} 
+                  aiResponse={aiResponse} 
+                  onAskAI={handleAskAI}
+                  videoOpacity={videoOpacity}
+                  setVideoOpacity={setVideoOpacity}
+                  isVideoVisible={isVideoVisible}
+                  setIsVideoVisible={setIsVideoVisible}
+                />
                 <ReferencePanel />
             </>
         )}

@@ -1,14 +1,26 @@
 import React from 'react';
 import { AppState, AIResponse } from '../types';
-import { Activity, Brain, Hand, Zap } from 'lucide-react';
+import { Activity, Brain, Hand, Zap, Settings, Eye, EyeOff } from 'lucide-react';
 
 interface InfoPanelProps {
   state: AppState;
   aiResponse: AIResponse;
   onAskAI: () => void;
+  videoOpacity: number;
+  setVideoOpacity: (val: number) => void;
+  isVideoVisible: boolean;
+  setIsVideoVisible: (val: boolean) => void;
 }
 
-export const InfoPanel: React.FC<InfoPanelProps> = ({ state, aiResponse, onAskAI }) => {
+export const InfoPanel: React.FC<InfoPanelProps> = ({ 
+  state, 
+  aiResponse, 
+  onAskAI,
+  videoOpacity,
+  setVideoOpacity,
+  isVideoVisible,
+  setIsVideoVisible
+}) => {
   const isGestureDetected = !!state.detectedGesture && state.detectedGesture !== "None";
 
   return (
@@ -58,6 +70,45 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({ state, aiResponse, onAskAI
                 {isGestureDetected ? state.detectedGesture : "Waiting..."}
             </div>
         </div>
+      </div>
+
+      {/* Settings Section */}
+      <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 space-y-3">
+        <div className="flex items-center gap-2 mb-2">
+            <Settings className="w-4 h-4 text-slate-400" />
+            <span className="text-sm font-semibold text-slate-200">View Settings</span>
+        </div>
+
+        {/* Visibility Toggle */}
+        <div className="flex justify-between items-center">
+            <span className="text-xs text-slate-400">Camera Feed</span>
+            <button
+                onClick={() => setIsVideoVisible(!isVideoVisible)}
+                className={`p-2 rounded-lg transition-colors ${isVideoVisible ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-700 text-slate-500'}`}
+                title={isVideoVisible ? "Hide Video" : "Show Video"}
+            >
+                {isVideoVisible ? <Eye size={16} /> : <EyeOff size={16} />}
+            </button>
+        </div>
+
+        {/* Opacity Slider */}
+        {isVideoVisible && (
+            <div className="space-y-1 pt-1">
+                <div className="flex justify-between text-xs text-slate-400">
+                    <span>Opacity</span>
+                    <span>{Math.round(videoOpacity * 100)}%</span>
+                </div>
+                <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={videoOpacity}
+                    onChange={(e) => setVideoOpacity(parseFloat(e.target.value))}
+                    className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                />
+            </div>
+        )}
       </div>
 
       {/* AI Insight Section */}
