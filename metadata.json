@@ -1,0 +1,7 @@
+{
+  "name": "GestureGenius",
+  "description": "Real-time hand tracking and gesture recognition using MediaPipe Tasks Vision, enhanced with Gemini AI for gesture interpretation.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
