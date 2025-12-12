@@ -1,4 +1,5 @@
 import { Landmark } from './types';
+import { FaceLandmarker } from '@mediapipe/tasks-vision';
 
 // Finger connections for drawing the skeleton
 export const HAND_CONNECTIONS = [
@@ -44,6 +45,28 @@ export function drawLandmarks(
     ctx.shadowBlur = 10;
     ctx.stroke();
     ctx.shadowBlur = 0; // Reset
+  }
+}
+
+export function drawFaceMesh(
+  ctx: CanvasRenderingContext2D,
+  landmarks: Landmark[],
+  color: string = '#ff0080'
+) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 0.5; // Thinner lines for face mesh
+  
+  // Connect landmarks based on tessellation
+  const connections = FaceLandmarker.FACE_LANDMARKS_TESSELATION;
+  
+  for (const connection of connections) {
+    const start = landmarks[connection.start];
+    const end = landmarks[connection.end];
+    
+    ctx.beginPath();
+    ctx.moveTo(start.x * ctx.canvas.width, start.y * ctx.canvas.height);
+    ctx.lineTo(end.x * ctx.canvas.width, end.y * ctx.canvas.height);
+    ctx.stroke();
   }
 }
 

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { GripHorizontal } from 'lucide-react';
 
 const GESTURES = [
   { name: "Open_Palm", emoji: "✋", label: "Open Palm" },
@@ -13,26 +14,90 @@ const GESTURES = [
 ];
 
 export const ReferencePanel: React.FC = () => {
+  // State for position, initialized to top-left
+  const [position, setPosition] = useState({ x: 24, y: 24 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Ensure panel is positioned at the top on mount
+  useEffect(() => {
+    setPosition({ x: 24, y: 24 });
+  }, []);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (panelRef.current) {
+      const rect = panelRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+      setIsDragging(true);
+    }
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        setPosition({
+          x: e.clientX - dragOffset.x,
+          y: e.clientY - dragOffset.y
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
+
   return (
-    <div className="absolute bottom-6 left-6 z-20 max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar">
-      <div className="bg-slate-900/80 backdrop-blur-md border border-slate-700 rounded-2xl p-4 shadow-2xl max-w-[280px]">
-        <h3 className="text-slate-300 text-xs font-bold uppercase tracking-wider mb-3 border-b border-slate-700 pb-2">
-          Gesture Guide
-        </h3>
-        <div className="grid grid-cols-2 gap-2">
-          {GESTURES.map((gesture) => (
-            <div 
-              key={gesture.name}
-              className="flex items-center gap-2 p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-700/50 transition-colors"
-            >
-              <span className="text-xl" role="img" aria-label={gesture.label}>
-                {gesture.emoji}
-              </span>
-              <span className="text-xs text-slate-300 font-medium">
-                {gesture.label}
-              </span>
+    <div 
+      ref={panelRef}
+      style={{ left: `${position.x}px`, top: `${position.y}px` }}
+      className="absolute z-20 w-[280px]"
+    >
+      <div className="bg-slate-900/80 backdrop-blur-md border border-slate-700 rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[80vh]">
+        
+        {/* Drag Handle Header */}
+        <div 
+            onMouseDown={handleMouseDown}
+            className={`p-3 border-b border-slate-700 flex items-center justify-between select-none bg-slate-800/50 hover:bg-slate-800 transition-colors ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            title="Drag to move"
+        >
+            <h3 className="text-slate-300 text-xs font-bold uppercase tracking-wider">
+            Gesture Guide
+            </h3>
+            <GripHorizontal className="w-4 h-4 text-slate-500" />
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto custom-scrollbar p-4 pr-2">
+            <div className="grid grid-cols-2 gap-2">
+            {GESTURES.map((gesture) => (
+                <div 
+                key={gesture.name}
+                className="flex items-center gap-2 p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-700/50 transition-colors"
+                >
+                <span className="text-xl" role="img" aria-label={gesture.label}>
+                    {gesture.emoji}
+                </span>
+                <span className="text-xs text-slate-300 font-medium truncate">
+                    {gesture.label}
+                </span>
+                </div>
+            ))}
             </div>
-          ))}
         </div>
       </div>
     </div>

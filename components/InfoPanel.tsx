@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppState, AIResponse } from '../types';
-import { Activity, Brain, Hand, Zap, Settings, Eye, EyeOff } from 'lucide-react';
+import { Activity, Brain, Hand, Zap, Settings, Eye, EyeOff, Maximize, Scan } from 'lucide-react';
 
 interface InfoPanelProps {
   state: AppState;
@@ -10,6 +10,8 @@ interface InfoPanelProps {
   setVideoOpacity: (val: number) => void;
   isVideoVisible: boolean;
   setIsVideoVisible: (val: boolean) => void;
+  videoSize: { width: number; height: number };
+  setVideoSize: (val: { width: number; height: number }) => void;
 }
 
 export const InfoPanel: React.FC<InfoPanelProps> = ({ 
@@ -19,12 +21,21 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
   videoOpacity,
   setVideoOpacity,
   isVideoVisible,
-  setIsVideoVisible
+  setIsVideoVisible,
+  videoSize,
+  setVideoSize
 }) => {
   const isGestureDetected = !!state.detectedGesture && state.detectedGesture !== "None";
 
+  const handleSizeChange = (dim: 'width' | 'height', value: number) => {
+    setVideoSize({
+        ...videoSize,
+        [dim]: value
+    });
+  };
+
   return (
-    <div className="absolute top-4 right-4 w-80 bg-slate-900/80 backdrop-blur-md border border-slate-700 rounded-2xl p-6 shadow-2xl z-20 text-slate-100 flex flex-col gap-6 transition-all duration-300">
+    <div className="absolute top-4 right-4 w-80 bg-slate-900/80 backdrop-blur-md border border-slate-700 rounded-2xl p-6 shadow-2xl z-30 text-slate-100 flex flex-col gap-6 transition-all duration-300 max-h-[calc(100%-2rem)] overflow-y-auto custom-scrollbar">
       
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-slate-700 pb-4">
@@ -73,14 +84,56 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
       </div>
 
       {/* Settings Section */}
-      <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 space-y-3">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 space-y-4">
+        <div className="flex items-center gap-2 mb-1">
             <Settings className="w-4 h-4 text-slate-400" />
             <span className="text-sm font-semibold text-slate-200">View Settings</span>
         </div>
 
+        {/* Video Dimensions */}
+        <div className="space-y-3 pt-2 border-t border-slate-700/50">
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+                <Maximize size={12} />
+                <span>Screen Size</span>
+            </div>
+            
+            {/* Width Slider */}
+            <div className="space-y-1">
+                <div className="flex justify-between text-[10px] text-slate-500 uppercase tracking-wider">
+                    <span>Width</span>
+                    <span>{videoSize.width}%</span>
+                </div>
+                <input
+                    type="range"
+                    min="20"
+                    max="100"
+                    step="5"
+                    value={videoSize.width}
+                    onChange={(e) => handleSizeChange('width', parseInt(e.target.value))}
+                    className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                />
+            </div>
+
+            {/* Height Slider */}
+             <div className="space-y-1">
+                <div className="flex justify-between text-[10px] text-slate-500 uppercase tracking-wider">
+                    <span>Height</span>
+                    <span>{videoSize.height}%</span>
+                </div>
+                <input
+                    type="range"
+                    min="20"
+                    max="100"
+                    step="5"
+                    value={videoSize.height}
+                    onChange={(e) => handleSizeChange('height', parseInt(e.target.value))}
+                    className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                />
+            </div>
+        </div>
+
         {/* Visibility Toggle */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center pt-2 border-t border-slate-700/50">
             <span className="text-xs text-slate-400">Camera Feed</span>
             <button
                 onClick={() => setIsVideoVisible(!isVideoVisible)}
@@ -93,9 +146,9 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
 
         {/* Opacity Slider */}
         {isVideoVisible && (
-            <div className="space-y-1 pt-1">
+            <div className="space-y-1">
                 <div className="flex justify-between text-xs text-slate-400">
-                    <span>Opacity</span>
+                    <span>Camera Opacity</span>
                     <span>{Math.round(videoOpacity * 100)}%</span>
                 </div>
                 <input
