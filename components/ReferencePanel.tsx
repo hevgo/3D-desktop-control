@@ -8,9 +8,8 @@ const GESTURES = [
   { name: "Victory", emoji: "✌️", label: "Victory" },
   { name: "Pointing_Up", emoji: "☝️", label: "Point Up" },
   { name: "Three", emoji: "3️⃣", label: "Three" },
-  { name: "Four", emoji: "4️⃣", label: "Four" },
   { name: "Rock_On", emoji: "🤘", label: "Rock On" },
-  { name: "OK_Sign", emoji: "👌", label: "OK Sign" },
+  { name: "Pinch_OK", emoji: "👌", label: "Pinch/OK Sign" },
 ];
 
 export const ReferencePanel: React.FC = () => {

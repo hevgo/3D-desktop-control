@@ -89,25 +89,19 @@ export function detectCustomGestures(landmarks: Landmark[]): string | null {
         return "Three";
     }
 
-    // 2. Four: Index, Middle, Ring, Pinky extended. Thumb curled.
-    if (!thumbExt && indexExt && middleExt && ringExt && pinkyExt) {
-        return "Four";
-    }
-
-    // 3. Rock On: Index & Pinky Extended. Middle & Ring curled. Thumb curled.
+    // 2. Rock On: Index & Pinky Extended. Middle & Ring curled. Thumb curled.
     // Explicitly check !thumbExt to distinguish from "ILoveYou" (which has thumb extended)
     if (!thumbExt && indexExt && pinkyExt && !middleExt && !ringExt) {
         return "Rock_On";
     }
 
-    // 4. OK Sign: Thumb tip touches Index tip. Others extended.
+    // 3. Pinch/OK Sign: Thumb tip touches Index tip.
     const thumbTip = landmarks[4];
     const indexTip = landmarks[8];
     const distanceThumbIndex = getDistance(thumbTip, indexTip);
     
-    // If thumb and index are close (touching) and other fingers are up
-    if (distanceThumbIndex < scale * 0.3 && middleExt && ringExt && pinkyExt) {
-        return "OK_Sign";
+    if (distanceThumbIndex < scale * 0.3) {
+        return "Pinch/OK Sign";
     }
 
     return null;
