@@ -129,3 +129,38 @@ export function detectCustomGestures(landmarks: Landmark[]): string | null {
 
     return null;
 }
+
+export function detectEmotionFromBlendshapes(blendshapes: any[]): string {
+    if (!blendshapes || blendshapes.length === 0) return "Neutral";
+    
+    const categories = blendshapes[0].categories;
+    const scores: Record<string, number> = {};
+    
+    categories.forEach((cat: any) => {
+        scores[cat.categoryName] = cat.score;
+    });
+
+    // Thresholds
+    const SMILE_THRESHOLD = 0.5;
+    const SQUINT_THRESHOLD = 0.5;
+    const FROWN_THRESHOLD = 0.4; // browDown
+    const SURPRISE_THRESHOLD = 0.5; // browOuterUp
+
+    // 1. Happy (Smile)
+    const smileScore = (scores['mouthSmileLeft'] + scores['mouthSmileRight']) / 2;
+    if (smileScore > SMILE_THRESHOLD) return "Happy";
+
+    // 2. Angry (Brow Down)
+    const frownScore = (scores['browDownLeft'] + scores['browDownRight']) / 2;
+    if (frownScore > FROWN_THRESHOLD) return "Angry";
+
+    // 3. Surprise (Brow Outer Up or Eye Wide)
+    const surpriseScore = (scores['browOuterUpLeft'] + scores['browOuterUpRight']) / 2;
+    // const eyeWideScore = (scores['eyeWideLeft'] + scores['eyeWideRight']) / 2; 
+    if (surpriseScore > SURPRISE_THRESHOLD) return "Surprised";
+
+    // 4. Sad (Brow Inner Up)
+    if (scores['browInnerUp'] > 0.5) return "Sad";
+
+    return "Neutral";
+}

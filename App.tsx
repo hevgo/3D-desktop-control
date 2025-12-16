@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { FilesetResolver, GestureRecognizer, FaceLandmarker } from '@mediapipe/tasks-vision';
-import { drawLandmarks, drawFaceMesh, detectCustomGestures } from './utils';
+import { drawLandmarks, drawFaceMesh, detectCustomGestures, detectEmotionFromBlendshapes } from './utils';
 import { AppState, AIResponse } from './types';
 import { InfoPanel } from './components/InfoPanel';
 import { ReferencePanel } from './components/ReferencePanel';
-import { getGestureInsight } from './services/geminiService';
+import { getGestureInsight, getEmotionInsight } from './services/geminiService';
 import { Loader2, Camera, AlertCircle, Move, ScanFace } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -44,6 +44,7 @@ const App: React.FC = () => {
     cameraActive: false,
     errorMessage: null,
     detectedGesture: null,
+    detectedEmotion: null,
     confidence: 0,
     handedness: null,
   });
@@ -59,14 +60,14 @@ const App: React.FC = () => {
     if (typeof window !== 'undefined') {
         const centerX = (window.innerWidth - (window.innerWidth * 0.5)) / 2;
         
-        // Gesture Video at Top
-        setVideoPosition({
+        // Face Video at Top (Anatomically correct)
+        setFaceVideoPosition({
             x: centerX,
             y: 24
         });
 
-        // Face Video at Bottom
-        setFaceVideoPosition({
+        // Gesture Video at Bottom
+        setVideoPosition({
             x: centerX,
             y: window.innerHeight - (window.innerHeight * 0.5) - 24
         });
@@ -288,9 +289,19 @@ const App: React.FC = () => {
         try {
             const result = faceLandmarker.detectForVideo(video, startTimeMs);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            let currentEmotion = "Neutral";
             if (result.faceLandmarks && result.faceLandmarks.length > 0) {
                 drawFaceMesh(ctx, result.faceLandmarks[0], '#ff0080');
+                
+                // Process Blendshapes
+                if (result.faceBlendshapes && result.faceBlendshapes.length > 0) {
+                    currentEmotion = detectEmotionFromBlendshapes(result.faceBlendshapes);
+                }
             }
+            
+            setAppState(prev => ({ ...prev, detectedEmotion: currentEmotion }));
+
         } catch (e) {
             console.warn("Face Recognition error:", e);
         }
@@ -374,13 +385,20 @@ const App: React.FC = () => {
     setAiResponse({ text, isLoading: false, error: null });
   };
 
+  const handleAskEmotionAI = async () => {
+    if (!appState.detectedEmotion) return;
+    setAiResponse(prev => ({ ...prev, isLoading: true, text: '' }));
+    const text = await getEmotionInsight(appState.detectedEmotion);
+    setAiResponse({ text, isLoading: false, error: null });
+  };
+
   return (
     <div className="relative w-full h-screen bg-slate-950 overflow-hidden">
       
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-slate-950 to-slate-950 z-0"></div>
 
-      {/* --- GESTURE RECOGNITION SCREEN (TOP) --- */}
+      {/* --- GESTURE RECOGNITION SCREEN (BOTTOM) --- */}
       <div 
         ref={containerRef}
         className="absolute z-10 shadow-2xl bg-black overflow-hidden border border-slate-800 rounded-xl"
@@ -416,7 +434,7 @@ const App: React.FC = () => {
         />
       </div>
 
-      {/* --- FACE MESH SCREEN (BOTTOM) --- */}
+      {/* --- FACE MESH SCREEN (TOP) --- */}
       {/* Always render to ensure refs are active for stream attachment, but control visibility via state if needed */}
       <div 
         ref={faceContainerRef}
@@ -427,10 +445,7 @@ const App: React.FC = () => {
         left: `${faceVideoPosition.x}px`,
         top: `${faceVideoPosition.y}px`,
         transition: isFaceVideoDragging ? 'none' : 'width 0.3s, height 0.3s, opacity 0.3s',
-        display: appState.cameraActive ? 'block' : 'none' // Hide until active, but keep in DOM if needed, though 'none' removes it from layout calculation.
-        // Actually, we need it to be present for refs to work when enableCamera is called.
-        // enableCamera sets cameraActive to true slightly later in onPlay. 
-        // So we should just let it be visible but empty (black) or 'hidden'
+        display: appState.cameraActive ? 'block' : 'none' 
         }}
       >
         <div 
@@ -499,6 +514,7 @@ const App: React.FC = () => {
                     state={appState} 
                     aiResponse={aiResponse} 
                     onAskAI={handleAskAI}
+                    onAskEmotionAI={handleAskEmotionAI}
                     videoOpacity={videoOpacity}
                     setVideoOpacity={setVideoOpacity}
                     isVideoVisible={isVideoVisible}

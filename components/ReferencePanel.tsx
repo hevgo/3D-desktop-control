@@ -13,6 +13,14 @@ const GESTURES = [
   { name: "Pinch_OK", emoji: "👌", label: "Pinch/OK Sign" },
 ];
 
+const EMOTIONS = [
+  { name: "Happy", emoji: "😄", label: "Happy" },
+  { name: "Sad", emoji: "😢", label: "Sad" },
+  { name: "Angry", emoji: "😠", label: "Angry" },
+  { name: "Surprised", emoji: "😲", label: "Surprised" },
+  { name: "Neutral", emoji: "😐", label: "Neutral" },
+];
+
 export const ReferencePanel: React.FC = () => {
   // State for position, initialized to top-left
   const [position, setPosition] = useState({ x: 24, y: 24 });
@@ -76,14 +84,17 @@ export const ReferencePanel: React.FC = () => {
             title="Drag to move"
         >
             <h3 className="text-slate-300 text-xs font-bold uppercase tracking-wider">
-            Gesture Guide
+            Guides
             </h3>
             <GripHorizontal className="w-4 h-4 text-slate-500" />
         </div>
 
         {/* Scrollable Content */}
         <div className="overflow-y-auto custom-scrollbar p-4 pr-2">
-            <div className="grid grid-cols-2 gap-2">
+            
+            {/* Gestures Section */}
+            <h4 className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-2">Gestures</h4>
+            <div className="grid grid-cols-2 gap-2 mb-4">
             {GESTURES.map((gesture) => (
                 <div 
                 key={gesture.name}
@@ -98,6 +109,28 @@ export const ReferencePanel: React.FC = () => {
                 </div>
             ))}
             </div>
+
+            {/* Divider */}
+            <div className="h-px bg-slate-700/50 my-2" />
+
+            {/* Emotions Section */}
+            <h4 className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-2 pt-2">Emotions</h4>
+            <div className="grid grid-cols-2 gap-2">
+            {EMOTIONS.map((emotion) => (
+                <div 
+                key={emotion.name}
+                className="flex items-center gap-2 p-2 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-700/50 transition-colors"
+                >
+                <span className="text-xl" role="img" aria-label={emotion.label}>
+                    {emotion.emoji}
+                </span>
+                <span className="text-xs text-slate-300 font-medium truncate">
+                    {emotion.label}
+                </span>
+                </div>
+            ))}
+            </div>
+
         </div>
       </div>
     </div>

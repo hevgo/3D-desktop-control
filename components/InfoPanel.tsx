@@ -1,11 +1,12 @@
 import React from 'react';
 import { AppState, AIResponse } from '../types';
-import { Activity, Brain, Hand, Zap, Settings, Eye, EyeOff, Maximize, Scan } from 'lucide-react';
+import { Activity, Brain, Hand, Zap, Settings, Eye, EyeOff, Maximize, Smile, Sparkles } from 'lucide-react';
 
 interface InfoPanelProps {
   state: AppState;
   aiResponse: AIResponse;
   onAskAI: () => void;
+  onAskEmotionAI: () => void;
   videoOpacity: number;
   setVideoOpacity: (val: number) => void;
   isVideoVisible: boolean;
@@ -18,6 +19,7 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
   state, 
   aiResponse, 
   onAskAI,
+  onAskEmotionAI,
   videoOpacity,
   setVideoOpacity,
   isVideoVisible,
@@ -26,6 +28,7 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
   setVideoSize
 }) => {
   const isGestureDetected = !!state.detectedGesture && state.detectedGesture !== "None";
+  const isEmotionDetected = !!state.detectedEmotion;
 
   const handleSizeChange = (dim: 'width' | 'height', value: number) => {
     setVideoSize({
@@ -57,13 +60,14 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
             </span>
         </div>
 
+        {/* Hand Detection Box */}
         <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
             <div className="flex items-center gap-2 mb-2">
                 <Hand className="w-4 h-4 text-cyan-400" />
                 <span className="text-sm font-semibold text-cyan-100">Hand Detected</span>
             </div>
              <div className="flex justify-between items-end">
-                <span className="text-2xl font-bold tracking-wider">
+                <span className="text-xl font-bold tracking-wider">
                     {state.handedness || "--"}
                 </span>
                 <span className="text-xs text-slate-500 font-mono">
@@ -72,15 +76,70 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
              </div>
         </div>
 
+        {/* Gesture Box */}
         <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 transition-all duration-300">
              <div className="flex items-center gap-2 mb-2">
                 <Zap className="w-4 h-4 text-purple-400" />
                 <span className="text-sm font-semibold text-purple-100">Gesture</span>
             </div>
-            <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+            <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
                 {isGestureDetected ? state.detectedGesture : "Waiting..."}
             </div>
         </div>
+
+        {/* Emotion Box */}
+        <div className="bg-slate-800/50 rounded-xl p-4 border border-pink-900/30 transition-all duration-300">
+             <div className="flex items-center gap-2 mb-2">
+                <Smile className="w-4 h-4 text-pink-400" />
+                <span className="text-sm font-semibold text-pink-100">Emotion</span>
+            </div>
+            <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-orange-400">
+                {state.detectedEmotion || "Neutral"}
+            </div>
+        </div>
+      </div>
+
+      {/* AI Insight Section */}
+      <div className="pt-2 border-t border-slate-700 space-y-2">
+        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">AI Analysis</p>
+        
+        {/* Buttons Grid */}
+        <div className="grid grid-cols-2 gap-2">
+            <button
+                onClick={onAskAI}
+                disabled={!isGestureDetected || aiResponse.isLoading}
+                className={`py-2 px-2 rounded-lg flex flex-col items-center justify-center gap-1 font-semibold text-xs transition-all duration-200
+                    ${!isGestureDetected 
+                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
+                        : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg active:scale-95'
+                    }
+                `}
+            >
+                <Brain className={`w-4 h-4 ${aiResponse.isLoading ? 'animate-pulse' : ''}`} />
+                <span>Gesture</span>
+            </button>
+
+            <button
+                onClick={onAskEmotionAI}
+                disabled={!isEmotionDetected || aiResponse.isLoading}
+                className={`py-2 px-2 rounded-lg flex flex-col items-center justify-center gap-1 font-semibold text-xs transition-all duration-200
+                    ${!isEmotionDetected 
+                        ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
+                        : 'bg-pink-600 hover:bg-pink-500 text-white shadow-lg active:scale-95'
+                    }
+                `}
+            >
+                <Sparkles className={`w-4 h-4 ${aiResponse.isLoading ? 'animate-pulse' : ''}`} />
+                <span>Emotion</span>
+            </button>
+        </div>
+
+        {/* Result Area */}
+        {aiResponse.text && (
+            <div className="mt-2 bg-indigo-900/20 border border-indigo-500/30 rounded-xl p-4 text-sm leading-relaxed text-indigo-100 animate-in fade-in slide-in-from-bottom-2">
+                <p>{aiResponse.text}</p>
+            </div>
+        )}
       </div>
 
       {/* Settings Section */}
@@ -160,29 +219,6 @@ export const InfoPanel: React.FC<InfoPanelProps> = ({
                     onChange={(e) => setVideoOpacity(parseFloat(e.target.value))}
                     className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
                 />
-            </div>
-        )}
-      </div>
-
-      {/* AI Insight Section */}
-      <div className="pt-2 border-t border-slate-700">
-        <button
-            onClick={onAskAI}
-            disabled={!isGestureDetected || aiResponse.isLoading}
-            className={`w-full py-3 px-4 rounded-xl flex items-center justify-center gap-2 font-semibold transition-all duration-200
-                ${!isGestureDetected 
-                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed' 
-                    : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/25 active:scale-95'
-                }
-            `}
-        >
-            <Brain className={`w-5 h-5 ${aiResponse.isLoading ? 'animate-pulse' : ''}`} />
-            {aiResponse.isLoading ? 'Thinking...' : 'Analyze Gesture with AI'}
-        </button>
-
-        {aiResponse.text && (
-            <div className="mt-4 bg-indigo-900/20 border border-indigo-500/30 rounded-xl p-4 text-sm leading-relaxed text-indigo-100 animate-in fade-in slide-in-from-bottom-2">
-                <p>{aiResponse.text}</p>
             </div>
         )}
       </div>

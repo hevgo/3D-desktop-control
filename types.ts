@@ -27,6 +27,7 @@ export interface AppState {
   cameraActive: boolean;
   errorMessage: string | null;
   detectedGesture: string | null;
+  detectedEmotion: string | null;
   confidence: number;
   handedness: string | null;
 }

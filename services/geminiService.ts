@@ -34,3 +34,29 @@ export const getGestureInsight = async (gestureName: string): Promise<string> =>
     return "Could not retrieve gesture insight at this time.";
   }
 };
+
+export const getEmotionInsight = async (emotion: string): Promise<string> => {
+  if (!ai) {
+    return "API Key not configured. Unable to fetch insights.";
+  }
+
+  try {
+    const model = "gemini-2.5-flash";
+    const prompt = `
+      The user's facial expression is currently detected as "${emotion}".
+      1. Briefly summarize what this expression generally conveys.
+      2. Provide a creative, hypothetical, and specific reason why they might be feeling this way right now (e.g., they just stepped on a lego, they smelled fresh cookies). 
+      Keep it short, fun, and within 2-3 sentences.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: model,
+      contents: prompt,
+    });
+
+    return response.text || "No insight available.";
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    return "Could not retrieve emotion insight at this time.";
+  }
+};
