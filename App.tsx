@@ -26,14 +26,14 @@ const App: React.FC = () => {
   const [isVideoVisible, setIsVideoVisible] = useState<boolean>(true);
   
   // Gesture Video State
-  const [videoSize, setVideoSize] = useState<{ width: number; height: number }>({ width: 50, height: 50 });
+  const [videoSize, setVideoSize] = useState<{ width: number; height: number }>({ width: 30, height: 30 });
   const [videoPosition, setVideoPosition] = useState({ x: 0, y: 0 });
   const [isVideoDragging, setIsVideoDragging] = useState(false);
   const [videoDragOffset, setVideoDragOffset] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Face Video State
-  const [faceVideoSize, setFaceVideoSize] = useState<{ width: number; height: number }>({ width: 50, height: 50 });
+  const [faceVideoSize, setFaceVideoSize] = useState<{ width: number; height: number }>({ width: 30, height: 30 });
   const [faceVideoPosition, setFaceVideoPosition] = useState({ x: 0, y: 0 });
   const [isFaceVideoDragging, setIsFaceVideoDragging] = useState(false);
   const [faceVideoDragOffset, setFaceVideoDragOffset] = useState({ x: 0, y: 0 });
@@ -58,18 +58,22 @@ const App: React.FC = () => {
   // Initialize Positions
   useEffect(() => {
     if (typeof window !== 'undefined') {
-        const centerX = (window.innerWidth - (window.innerWidth * 0.5)) / 2;
+        // Initial size is 30% (0.3)
+        const size = 0.3;
+        const centerX = (window.innerWidth - (window.innerWidth * size)) / 2;
         
-        // Face Video at Top (Anatomically correct)
+        // Face Video: Middle Upper (Center of top half)
+        // Top half center is 25vh. Video half height is 15vh. Start Y = 10vh.
         setFaceVideoPosition({
             x: centerX,
-            y: 24
+            y: window.innerHeight * 0.1 
         });
 
-        // Gesture Video at Bottom
+        // Gesture Video: Middle Bottom (Center of bottom half)
+        // Bottom half center is 75vh. Video half height is 15vh. Start Y = 60vh.
         setVideoPosition({
             x: centerX,
-            y: window.innerHeight - (window.innerHeight * 0.5) - 24
+            y: window.innerHeight * 0.6
         });
     }
   }, []);
